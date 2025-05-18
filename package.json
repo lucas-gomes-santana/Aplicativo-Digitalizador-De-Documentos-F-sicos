@@ -1,15 +1,28 @@
 {
   "name": "projeto-digitalizador-de-manuscritos",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "npm test"
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build": "electron-builder"
   },
-  "keywords": [],
+  "keywords": ["ocr", "text-extraction", "manuscripts", "digitalization"],
   "author": "Lucas Gomes Santana",
   "license": "ISC",
   "description": "A Electron.JS application that extract text of fotos. It's will be used to digitalize text content of old books, articles and manuscripts",
   "devDependencies": {
-    "electron": "^36.2.1"
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "tesseract.js": "^5.0.3"
+  },
+  "build": {
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "executableName": "digitalizador-manuscritos"
+    }
   }
 }
