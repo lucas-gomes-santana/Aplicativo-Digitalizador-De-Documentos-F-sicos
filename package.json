@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm test"
   },
   "keywords": [],
-  "author": "",
+  "author": "Lucas Gomes Santana",
   "license": "ISC",
-  "description": "",
+  "description": "A Electron.JS application that extract text of fotos. It's will be used to digitalize text content of old books, articles and manuscripts",
   "devDependencies": {
     "electron": "^36.2.1"
   }
