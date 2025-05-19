@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'">
     <title>Digitalizador de Páginas</title>
+    <link rel="stylesheet" href="../styles/main.css">
 </head>
 <body>
-
     <h1>Extrair Texto de Imagem</h1>
 
     <div id="drop-area">
         <p>Arraste e solte uma imagem aqui ou clique para selecionar</p>
         <input type="file" id="file-input" accept="image/*" hidden />
-        <button onclick="document.getElementById('file-input').click()">Selecionar Imagem</button>
+        <button id="select-button">Selecionar Imagem</button>
     </div>
     
     <textarea id="result" rows="10" cols="50" placeholder="Texto extraído aparecerá aqui..."></textarea>
     <button id="save-btn" disabled>Salvar como .txt</button>
     
-    <script src="/scripts/preload.js" defer></script>
-    <script src="/scripts/extractText.js" defer></script>
-
+    <script src="../scripts/preload.js"></script>
+    <script src="../scripts/extractText.js"></script>
 </body>
 </html>
