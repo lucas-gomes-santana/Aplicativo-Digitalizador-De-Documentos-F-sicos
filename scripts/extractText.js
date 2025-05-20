@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultArea = document.getElementById('result');
     const saveButton = document.getElementById('save-btn');
 
+    // Constantes para validação de arquivos
+    const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
     // Previne o comportamento padrão de arrastar e soltar
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropArea.addEventListener(eventName, preventDefaults, false);
@@ -42,6 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
         dropArea.classList.remove('highlight');
     }
 
+    function validateFile(file) {
+        const extension = '.' + file.name.split('.').pop().toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(extension)) {
+            throw new Error('Formato de arquivo não suportado. Use apenas JPG, JPEG ou PNG.');
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            throw new Error('Arquivo muito grande. Tamanho máximo permitido: 10MB');
+        }
+        return true;
+    }
+
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
@@ -54,21 +69,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleFiles(files) {
-        if (files.length > 0) {
+        if (files && files.length > 0) {
             const file = files[0];
-            if (file.type.startsWith('image/')) {
-                try {
-                    resultArea.value = 'Processando imagem...';
-                    const text = await window.electronAPI.extractText(file.path);
-                    resultArea.value = text;
-                    saveButton.disabled = false;
-                } catch (error) {
-                    resultArea.value = 'Erro ao processar a imagem: ' + error.message;
-                    saveButton.disabled = true;
-                }
-            } else {
-                resultArea.value = 'Por favor, selecione um arquivo de imagem válido.';
+            try {
+                validateFile(file);
+                resultArea.value = 'Processando imagem...';
+                const text = await window.electronAPI.extractText(file.path);
+                resultArea.value = text;
+                saveButton.disabled = false;
+            } catch (error) {
+                resultArea.value = 'Erro: ' + error.message;
                 saveButton.disabled = true;
+            } finally {
+                // Limpa recursos
+                if (fileInput.files.length > 0) {
+                    fileInput.value = '';
+                }
             }
         }
     }

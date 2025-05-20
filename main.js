@@ -4,6 +4,7 @@ const Tesseract = require('tesseract.js');
 const fs = require('fs');
 
 let mainWindow;
+let currentWorker = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -13,12 +14,12 @@ function createWindow() {
             preload: path.join(__dirname, 'scripts', 'preload.js'),
             contextIsolated: true,
             nodeIntegration: false,
-            sandbox: true,
+            sandbox: false,
             enableRemoteModule: false,
             webSecurity: true,
-            allowRunningInsecureContent: false
+            allowRunningInsecureContent: false,
+            nodeIntegrationInWorker: true
         },
-        
         backgroundColor: '#ffffff',
         show: false
     });
@@ -28,24 +29,21 @@ function createWindow() {
         callback({
             responseHeaders: {
                 ...details.responseHeaders,
-                'Content-Security-Policy': ["default-src 'self'; script-src 'self'; style-src 'self'"]
+                'Content-Security-Policy': ["default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"]
             }
         });
     });
 
     mainWindow.loadFile('pages/index.html');
     
-    // Mostra a janela quando estiver pronta
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
     });
     
-    // Configura o DevTools apenas em desenvolvimento
     if (process.env.NODE_ENV === 'development') {
         mainWindow.webContents.openDevTools();
     }
 
-    // Filtra mensagens do console
     mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
         if (message.includes('Autofill')) {
             event.preventDefault();
@@ -58,25 +56,29 @@ app.whenReady().then(createWindow);
 // Handler para extração de texto
 ipcMain.handle('extract-text', async (event, imagePath) => {
     try {
-        // Verifica se o arquivo existe
         if (!fs.existsSync(imagePath)) {
             throw new Error(`Arquivo não encontrado: ${imagePath}`);
         }
 
+        // Verifica a extensão do arquivo
+        const ext = path.extname(imagePath).toLowerCase();
+        if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
+            throw new Error('Formato de arquivo não suportado. Use apenas JPG, JPEG ou PNG.');
+        }
+
         console.log('Iniciando extração de texto da imagem:', imagePath);
         
-        const result = await Tesseract.recognize(
-            imagePath,
-            'por', // Idioma português
-            {
-                logger: m => {
-                    console.log('Progresso:', m);
-                    if (m.status === 'recognizing text') {
-                        mainWindow.webContents.send('ocr-progress', m.progress);
-                    }
-                }
-            }
-        );
+        // Cancela qualquer worker anterior
+        if (currentWorker) {
+            await currentWorker.terminate();
+        }
+
+        // Cria novo worker
+        currentWorker = await Tesseract.createWorker();
+        await currentWorker.loadLanguage('por');
+        await currentWorker.initialize('por');
+
+        const result = await currentWorker.recognize(imagePath);
 
         if (!result || !result.data || !result.data.text) {
             throw new Error('Nenhum texto foi extraído da imagem');
@@ -87,6 +89,12 @@ ipcMain.handle('extract-text', async (event, imagePath) => {
     } catch (error) {
         console.error('Erro na extração de texto:', error);
         throw error;
+    } finally {
+        // Limpa recursos
+        if (currentWorker) {
+            await currentWorker.terminate();
+            currentWorker = null;
+        }
     }
 });
 
@@ -123,7 +131,11 @@ ipcMain.handle('save-text', async (event, text) => {
 });
 
 // Tratamento de fechamento da aplicação
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+    if (currentWorker) {
+        await currentWorker.terminate();
+        currentWorker = null;
+    }
     if (process.platform !== 'darwin') {
         app.quit();
     }

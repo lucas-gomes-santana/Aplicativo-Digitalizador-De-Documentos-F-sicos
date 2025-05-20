@@ -1,6 +1,5 @@
 // Preload script
-const electron = require('node:electron');
-const { contextBridge, ipcRenderer } = electron;
+const { contextBridge, ipcRenderer } = require('electron');
 
 // Função para validar o caminho do arquivo
 function validateFilePath(filePath) {
