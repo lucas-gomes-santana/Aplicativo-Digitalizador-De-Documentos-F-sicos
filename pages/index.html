@@ -8,16 +8,17 @@
     <link rel="stylesheet" href="../styles/main.css">
 </head>
 <body>
-    <h1>Extrair Texto de Imagem</h1>
+    <h1>Digitalizador de Documentos Físicos</h1>
 
     <div id="drop-area">
-        <p>Arraste e solte uma imagem aqui ou clique para selecionar</p>
+        <p>Clique aqui para selecionar uma imagem.</p>
+
         <input type="file" id="file-input" accept="image/*" hidden />
         <button id="select-button">Selecionar Imagem</button>
     </div>
     
-    <textarea id="result" rows="10" cols="50" placeholder="Texto extraído aparecerá aqui..."></textarea>
-    <button id="save-btn" disabled>Salvar como .txt</button>
+    <textarea id="result" rows="10" cols="50" placeholder="Texto extraído aparecerá aqui..." readonly></textarea>
+    <button id="save-btn" disabled>Salvar</button>
     
     <script src="../scripts/preload.js"></script>
     <script src="../scripts/extractText.js"></script>

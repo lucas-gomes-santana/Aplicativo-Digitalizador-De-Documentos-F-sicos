@@ -10,6 +10,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
+
         webPreferences: {
             preload: path.join(__dirname, 'scripts', 'preload.js'),
             contextIsolated: true,
@@ -20,6 +21,7 @@ function createWindow() {
             allowRunningInsecureContent: false,
             nodeIntegrationInWorker: true
         },
+
         backgroundColor: '#ffffff',
         show: false
     });
@@ -60,8 +62,8 @@ ipcMain.handle('extract-text', async (event, imagePath) => {
             throw new Error(`Arquivo não encontrado: ${imagePath}`);
         }
 
-        // Verifica a extensão do arquivo
         const ext = path.extname(imagePath).toLowerCase();
+
         if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
             throw new Error('Formato de arquivo não suportado. Use apenas JPG, JPEG ou PNG.');
         }
@@ -75,8 +77,6 @@ ipcMain.handle('extract-text', async (event, imagePath) => {
 
         // Cria novo worker
         currentWorker = await Tesseract.createWorker();
-        await currentWorker.loadLanguage('por');
-        await currentWorker.initialize('por');
 
         const result = await currentWorker.recognize(imagePath);
 
@@ -86,11 +86,12 @@ ipcMain.handle('extract-text', async (event, imagePath) => {
 
         console.log('Texto extraído com sucesso');
         return result.data.text;
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Erro na extração de texto:', error);
         throw error;
-    } finally {
-        // Limpa recursos
+    } 
+    finally {
         if (currentWorker) {
             await currentWorker.terminate();
             currentWorker = null;
