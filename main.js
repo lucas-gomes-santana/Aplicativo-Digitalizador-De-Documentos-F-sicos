@@ -77,6 +77,8 @@ ipcMain.handle('extract-text', async (event, imagePath) => {
 
         // Cria novo worker
         currentWorker = await Tesseract.createWorker();
+        await currentWorker.loadLanguage('por');
+        await currentWorker.initialize('por');
 
         const result = await currentWorker.recognize(imagePath);
 
