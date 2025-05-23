@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const Tesseract = require('tesseract.js');
 const fs = require('fs');
+const https = require('https');
 
 let mainWindow;
 let currentWorker = null;
@@ -129,6 +130,93 @@ ipcMain.handle('save-text', async (event, text) => {
         return filePath;
     } catch (error) {
         console.error('Erro ao salvar arquivo:', error);
+        throw error;
+    }
+});
+
+// Handler para correção de texto usando LanguageTool
+ipcMain.handle('correct-text', async (event, text) => {
+    try {
+        if (!text || typeof text !== 'string') {
+            throw new Error('Texto inválido para correção');
+        }
+
+        console.log('Enviando texto para correção:', text.substring(0, 100) + '...');
+
+        return new Promise((resolve, reject) => {
+            const postData = `text=${encodeURIComponent(text)}&language=pt-BR&enabledOnly=false`;
+
+            const options = {
+                hostname: 'api.languagetool.org',
+                path: '/v2/check',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Length': Buffer.byteLength(postData),
+                    'Accept': 'application/json'
+                }
+            };
+
+            console.log('Fazendo requisição para LanguageTool...');
+
+            const req = https.request(options, (res) => {
+                let responseData = '';
+
+                res.on('data', (chunk) => {
+                    responseData += chunk;
+                });
+
+                res.on('end', () => {
+                    try {
+                        console.log('Resposta recebida do LanguageTool');
+                        
+                        if (res.statusCode !== 200) {
+                            throw new Error(`Erro na API: ${res.statusCode} - ${responseData}`);
+                        }
+
+                        const result = JSON.parse(responseData);
+                        console.log('Resposta processada:', JSON.stringify(result).substring(0, 200) + '...');
+
+                        if (!result.matches) {
+                            console.log('Nenhuma correção necessária');
+                            resolve(text);
+                            return;
+                        }
+
+                        let correctedText = text;
+                        // Aplica as correções na ordem inversa para não afetar os índices
+                        result.matches.reverse().forEach(match => {
+                            if (match.replacements && match.replacements.length > 0) {
+                                const start = match.offset;
+                                const end = match.offset + match.length;
+                                const replacement = match.replacements[0].value;
+                                console.log(`Corrigindo: "${text.substring(start, end)}" -> "${replacement}"`);
+                                correctedText = correctedText.substring(0, start) + 
+                                             replacement + 
+                                             correctedText.substring(end);
+                            }
+                        });
+
+                        console.log('Texto corrigido com sucesso');
+                        resolve(correctedText);
+                    } catch (error) {
+                        console.error('Erro ao processar resposta:', error);
+                        console.error('Resposta recebida:', responseData);
+                        reject(new Error('Erro ao processar resposta do LanguageTool: ' + error.message));
+                    }
+                });
+            });
+
+            req.on('error', (error) => {
+                console.error('Erro na requisição:', error);
+                reject(new Error('Erro na comunicação com LanguageTool: ' + error.message));
+            });
+
+            req.write(postData);
+            req.end();
+        });
+    } catch (error) {
+        console.error('Erro na correção de texto:', error);
         throw error;
     }
 });

@@ -44,5 +44,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
                 reject(error);
             }
         });
+    },
+
+    // API para correção de texto
+    correctText: (text) => {
+        return new Promise((resolve, reject) => {
+            try {
+                const validText = validateText(text);
+                ipcRenderer.invoke('correct-text', validText)
+                    .then(result => resolve(result))
+                    .catch(error => reject(error));
+            } 
+            catch (error) {
+                reject(error);
+            }
+        });
     }
 });

@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectButton = document.getElementById('select-button');
     const resultArea = document.getElementById('result');
     const saveButton = document.getElementById('save-btn');
+    const correctButton = document.getElementById('correct-btn');
 
     const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -80,12 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const text = await window.electronAPI.extractText(file.path);
                 resultArea.value = text;
                 saveButton.disabled = false;
+                correctButton.disabled = false;
 
             } 
             catch (error) {
                 resultArea.value = 'Erro: ' + error.message;
                 saveButton.disabled = true;
-
+                correctButton.disabled = true;
             } 
             finally {
                 if (fileInput.files.length > 0) {
@@ -112,4 +114,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Adiciona o evento de clique no botão de correção
+    correctButton.addEventListener('click', async () => {
+        const text = resultArea.value;
+        
+        if (text) {
+            try {
+                correctButton.disabled = true;
+                resultArea.value = 'Corrigindo texto...';
+                const textoCorrigido = await window.electronAPI.correctText(text);
+                resultArea.value = textoCorrigido;
+                saveButton.disabled = false;
+            } catch (error) {
+                alert('Erro ao corrigir o texto: ' + error.message);
+            } finally {
+                correctButton.disabled = false;
+            }
+        }
+    });
+
+    async function corrigirTexto(texto) {
+        try {
+            const textoCorrigido = await window.electron.correctText(texto);
+            // Atualizar a interface com o texto corrigido
+            return textoCorrigido;
+        } catch (error) {
+            console.error('Erro ao corrigir texto:', error);
+            // Tratar o erro adequadamente
+        }
+    }
 });

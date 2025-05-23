@@ -21,6 +21,7 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
+    "franc": "^6.2.0",
     "tesseract.js": "^5.1.1"
   },
   "build": {

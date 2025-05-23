@@ -44,4 +44,37 @@ button:hover {
 button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
+}
+
+.button-group {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.button-group button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button-group button:hover {
+    background-color: #45a049;
+}
+
+.button-group button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#correct-btn {
+    background-color: #2196F3;
+}
+
+#correct-btn:hover {
+    background-color: #1976D2;
 } 
